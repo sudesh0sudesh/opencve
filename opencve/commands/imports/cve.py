@@ -80,12 +80,7 @@ def run():
                     ]
                 else:
                     cvss2 = None
-
-                # Construct CWE and CPE lists
-                cwes = weaknesses_to_flat(cve_data.get("weaknesses"))
-                vendors_products = convert_cpes(cve_data.get("configurations", {}))
-                vendors_flatten = flatten_vendors(vendors_products)
-
+                
                 # In case of multiple languages, keep the EN one
                 descriptions = cve_data["descriptions"]
                 if len(descriptions) > 1:
@@ -93,6 +88,12 @@ def run():
                         d for d in descriptions if d["lang"] in ("en", "en-US")
                     ]
                 summary = descriptions[0]["value"]
+
+                # Construct CWE and CPE lists
+                cwes = weaknesses_to_flat(cve_data.get("weaknesses"))
+                vendors_products = convert_cpes(cve_data.get("configurations", summary,{}))
+                vendors_flatten = flatten_vendors(vendors_products)
+
 
                 # Create the CVEs mappings
                 mappings["cves"].append(

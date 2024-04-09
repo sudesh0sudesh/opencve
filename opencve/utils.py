@@ -4,13 +4,19 @@ from difflib import HtmlDiff
 from opencve.constants import PRODUCT_SEPARATOR
 from opencve.models.cwe import Cwe
 
+from openai import OpenAI
+import os
 
-def convert_cpes(conf):
+
+def convert_cpes(conf,summary):
     """
     This function takes an object, extracts its CPE uris and transforms them into
     a dictionnary representing the vendors with their associated products.
     """
     uris = nested_lookup("criteria", conf)
+    openai_api_key=os.environ.get("OPEN_AI_KEY",None)
+    client = OpenAI(api_key=openai_api_key)
+    instruction="Your sole purpose is to provide only the vendor name from the provided CVE summary without any heading and other information."
 
     # Try old NVD CVE format if no criteria found
     if not uris:
@@ -18,12 +24,31 @@ def convert_cpes(conf):
 
     # Create a list of tuple (vendor, product)
     cpes_t = list(set([tuple(uri.split(":")[3:5]) for uri in uris]))
+    
 
     # Transform it into nested dictionnary
     cpes = {}
     for vendor, product in cpes_t:
-        if vendor not in cpes:
+        if vendor not in cpes and openai_api_key is not None:
             cpes[vendor] = []
+            prompt= f"CVE SUMMARY:{summary}"
+            try:
+                completion=client.chat.completions.create(
+                model="gpt-3.5-turbo-0125",
+                messages=[
+                    {"role": "system", "content": instruction},
+                    {"role": "user", "content": prompt},
+                ],
+                )
+                vendor=completion.choices[0].message.content
+                cpes[vendor]=vendor.lower()
+            except Exception as e:
+                cpes[vendor] = []
+                print(e)
+                
+        elif vendor not in cpes:
+            cpes[vendor] = []   
+           
         cpes[vendor].append(product)
 
     return cpes
