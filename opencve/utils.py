@@ -49,6 +49,7 @@ def convert_cpes(conf,summary):
             vendor=completion.choices[0].message.content
             vendor=vendor.lower()
             cpes[vendor]=[]
+            print(vendor)
             
         except Exception as e:
             print(e)
