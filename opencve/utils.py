@@ -29,27 +29,29 @@ def convert_cpes(conf,summary):
     # Transform it into nested dictionnary
     cpes = {}
     for vendor, product in cpes_t:
-        if vendor not in cpes and openai_api_key is not None:
+        if vendor not in cpes:
             cpes[vendor] = []
-            prompt= f"CVE SUMMARY:{summary}"
-            try:
-                completion=client.chat.completions.create(
-                model="gpt-3.5-turbo-0125",
-                messages=[
-                    {"role": "system", "content": instruction},
-                    {"role": "user", "content": prompt},
-                ],
-                )
-                vendor=completion.choices[0].message.content
-                cpes[vendor]=[vendor.lower()]
-            except Exception as e:
-                cpes[vendor] = []
-                print(e)
-                
-        elif vendor not in cpes and openai_api_key is None:
-            cpes[vendor] = []   
            
         cpes[vendor].append(product)
+    
+    
+    if len(cpes)==0:
+        
+        prompt= f"CVE SUMMARY:{summary}"
+        try:
+            completion=client.chat.completions.create(
+            model="gpt-3.5-turbo-0125",
+            messages=[
+                {"role": "system", "content": instruction},
+                {"role": "user", "content": prompt},
+            ],
+            )
+            vendor=completion.choices[0].message.content
+            vendor=vendor.lower()
+            cpes[vendor]=[]
+            
+        except Exception as e:
+            print(e)
 
     return cpes
 
