@@ -46,7 +46,7 @@ def convert_cpes(conf,summary):
                 cpes[vendor] = []
                 print(e)
                 
-        elif vendor not in cpes:
+        elif vendor not in cpes and openai_api_key is None:
             cpes[vendor] = []   
            
         cpes[vendor].append(product)
